@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>People App</title>
+    <!-- load local stylesheet (css) -->
+    <link rel="stylesheet" href="/styles.css" />
+    <!-- loading jquery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+    <form method="GET" action="/search/">
+        <p><label>search: <input type="text" name="input"></label>
+            <label>kind: 
+                <select required name="term">
+                <option value>chooese one</option>
+                <option value="person">person</option>
+                <option value="movie">movie</option>
+            </select> </label>
+            <input type="submit" value="search"></p>
+        </p>
+    </form>
+
+    <h1>About</h1>
+
+    <p>This application is a simple knockoff of the <a href="https://www.imdb.com/">IMDB</a></p>
+    
+    <p><a href="/people-born-in/6">people born in June</a></p>
+
+    <p>An example of an actor: <a href="/nm/123">George Clooney (born 5/6/1961)</a></p>
+
+    <p>An example of a movie: <a href="/tt/120780">Out of Sight (1998)</a></p>
+
+    
+    <!-- load local js -->
+    <script src="/main.js"></script>
+</body>
+</html>

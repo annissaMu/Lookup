@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>LookUp</title>
+    <!-- load local stylesheet (css) -->
+    <link rel="stylesheet" href="/styles.css" />
+    <!-- loading jquery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+    <% function castDescription(castMember) {
+        let c = castMember;
+        return `${c.name} (born ${c.birthdate})`;
+    }
+    %>
+
+    <h1><%= titleName %></h1>
+
+    <p><%= description %></p>
+
+    <p>Cast:</p>
+    <ol>
+        <% cast.forEach( (castMember) => {%>
+        <!-- how to use ejx in the <a> tag? -->
+        <a><li><%= castDescription(castMember) %></li></a>
+        <% }); %>
+    </ol>
+
+
+    <!-- load local js -->
+    <script src="/main.js"></script>
+</body>
+</html>
