@@ -122,6 +122,17 @@ app.get('/tt/:tt', async (req, res) => {
                         });
 });
 
+// get info from form 
+app.get('/search/', (req, res) => {
+    let person = req.query.person;
+    if( ! ( monthNumber && monthNumber >= 1 && monthNumber <= 12 )) {
+        console.log("bad monthNumber", monthNumber);
+        return res.send(`<em>error</em> ${monthNumber} is not valid`);
+    }
+    console.log('monthNumber', monthNumber, 'redirecting');
+    res.redirect('/people-born-in/'+monthNumber);
+});
+
 // list all people in the wmdb.people table
 
 app.get('/people/', async (req, res) => {

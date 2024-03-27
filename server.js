@@ -45,6 +45,7 @@ const mongoUri = cs304.getMongoUri();
 // Use these constants and mispellings become errors
 const WMDB = "wmdb";
 const PEOPLE = "people";
+const MOVIE = "movies";
 const STAFF = "staff";
 
 // this list is also used to generate the menu, so element 0 is the default value
@@ -62,11 +63,75 @@ app.get('/', (req, res) => {
 
 function personDescription(person) {
     let p = person;
-    // adding this means that the UTC value works for our timezone
-    const NY_offset = 'T05:00:00.000Z'; 
-    let bday = (new Date(p.birthdate+NY_offset)).toLocaleDateString();
+    let bday = (new Date(p.birthdate)).toLocaleDateString();
     return `${p.name} (${p.nm}) born on ${bday}`;
 }
+
+app.get('/nm/:nm', async (req, res) => {
+    const personID = req.params.nm;
+
+    const db = await Connection.open(mongoUri, WMDB);
+
+    //find person
+    const people = db.collection(PEOPLE);
+    const person = await people.find({nm: parseInt(personID)}).toArray();
+
+    //shoot error if persond does not exist 
+    if(person == null ) {
+        console.log("invalid person", personID);
+        return res.send(`<em>error</em> ${personID} is not valid`);
+    }
+
+    // create description of person
+    let name = person[0].name;
+    let addedBy = person[0].addedby.name;
+    let birthdate = person[0].birthdate;
+    let movieList = person[0].movies;
+
+    return res.render('person.ejs',
+                      {description: `${name}, added by ${addedBy}, was born on ${birthdate}`,
+                       personName: name,
+                       movieList: movieList
+                    });
+});
+
+app.get('/tt/:tt', async (req, res) => {
+    const movieID = req.params.tt;
+
+    const db = await Connection.open(mongoUri, WMDB);
+
+    //find person
+    const movies = db.collection(MOVIE);
+    const movie = await movies.find({tt: parseInt(movieID)}).toArray();
+
+    //shoot error if persond does not exist 
+    if(movie == null ) {
+        console.log("invalid person", personID);
+        return res.send(`<em>error</em> ${personID} is not valid`);
+    }
+
+    // create description of person
+    let title = movie[0].title;
+    let release = movie[0].release;
+    let cast = movie[0].cast;
+
+    return res.render('movie.ejs',
+                      {description: `${title}, released on ${release}`,
+                       titleName: title,
+                       cast: cast
+                        });
+});
+
+// get info from form 
+app.get('/search/', (req, res) => {
+    let person = req.query.person;
+    if( ! ( monthNumber && monthNumber >= 1 && monthNumber <= 12 )) {
+        console.log("bad monthNumber", monthNumber);
+        return res.send(`<em>error</em> ${monthNumber} is not valid`);
+    }
+    console.log('monthNumber', monthNumber, 'redirecting');
+    res.redirect('/people-born-in/'+monthNumber);
+});
 
 // list all people in the wmdb.people table
 
@@ -148,6 +213,51 @@ app.get('/staffList/', async (req, res) => {
                       {listDescription: 'all staff',
                        list: names});
 });
+
+app.get('/menu-by-year/', async (req, res) => {
+    const db = await Connection.open(mongoUri, WMDB);
+    const people = db.collection(PEOPLE);
+    // not the most efficient approach; better to search in the database
+    let allYears = await people
+        .aggregate([{$set: {birthDateObj: {$dateFromString: { dateString: "$birthdate",
+                                                              format: "%Y-%m-%d",
+                                                              onError: null}}}},
+                    {$set: {birthYear: {$year: "$birthDateObj"}}},
+                    {$project: {birthYear: 1, _id: 0}},
+                    {$group: {_id: "$birthYear",
+                              count: {$count: {}}}}
+                   ])
+        .sort({_id: 1})
+        .project({_id: 1})
+        .toArray();
+    return res.render('yearMenu.ejs',
+                      {allYears})
+});
+
+app.get('/people-born-in-year/:year', async (req, res) => {
+    const db = await Connection.open(mongoUri, WMDB);
+    const people = db.collection(PEOPLE);
+    const year = req.params.year;
+    const yearMatch = new RegExp('^'+year+'-');
+    let folk = await people
+        .find({birthdate: yearMatch})
+        .project({nm: 1, name: 1, birthdate: 1})
+        .toArray();
+    let descriptions = folk.map(personDescription);
+    let now = new Date();
+    let nowStr = now.toLocaleString();
+    let num = descriptions.length;
+    console.log('len', descriptions.length, 'first', descriptions[0]);
+    return res.render('list.ejs',
+                      {listDescription: `${num} people born in ${year}`,
+                       list: descriptions});
+});
+
+app.get('/people-born-in-year/', (req, res) => {
+    res.redirect('/people-born-in-year/'+req.query.year);
+});
+    
+
 
 // ================================================================
 // postlude
