@@ -18,6 +18,7 @@ const cookieSession = require('cookie-session');
 
 const { Connection } = require('./connection');
 const cs304 = require('./cs304');
+const e = require('connect-flash');
 
 // Create and configure the app
 
@@ -123,14 +124,20 @@ app.get('/tt/:tt', async (req, res) => {
 });
 
 // get info from form 
-app.get('/search/', (req, res) => {
-    let person = req.query.person;
-    if( ! ( monthNumber && monthNumber >= 1 && monthNumber <= 12 )) {
-        console.log("bad monthNumber", monthNumber);
-        return res.send(`<em>error</em> ${monthNumber} is not valid`);
+app.get('/search/', async (req, res) => {
+    const term = req.query.term;
+    const kind = req.query.kind;
+    console.log(`You submitted ${term} and ${kind}`);
+    const db = await Connection.open(mongoUri, WMDB);
+    const people = db.collection(PEOPLE);
+    const movie = db.collection(MOVIE);
+    let result = []
+    if (kind=="person"){
+        result = await people.find({name: /term/}).toArray();
+    } else {
+        result = await movie.find({title:term}).toArray();
     }
-    console.log('monthNumber', monthNumber, 'redirecting');
-    res.redirect('/people-born-in/'+monthNumber);
+    console.log(result);
 });
 
 // list all people in the wmdb.people table
