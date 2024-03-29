@@ -77,12 +77,6 @@ app.get('/nm/:nm', async (req, res) => {
     const people = db.collection(PEOPLE);
     const person = await people.find({nm: parseInt(personID)}).toArray();
 
-    //shoot error if persond does not exist 
-    if(person == null ) {
-        console.log("invalid person", personID);
-        return res.send(`<em>error</em> ${personID} is not valid`);
-    }
-
     // create description of person
     let name = person[0].name;
     let addedBy = person[0].addedby.name;
@@ -104,12 +98,6 @@ app.get('/tt/:tt', async (req, res) => {
     //find person
     const movies = db.collection(MOVIE);
     const movie = await movies.find({tt: parseInt(movieID)}).toArray();
-
-    //shoot error if persond does not exist 
-    if(movie == null ) {
-        console.log("invalid person", personID);
-        return res.send(`<em>error</em> ${personID} is not valid`);
-    }
 
     // create description of person
     let title = movie[0].title;
@@ -133,11 +121,35 @@ app.get('/search/', async (req, res) => {
     const movie = db.collection(MOVIE);
     let result = []
     if (kind=="person"){
-        result = await people.find({name: /term/}).toArray();
+        result = await people.find({name: new RegExp([term].join(""), "i")}).toArray();
+        console.log(result.length);
+        if (result.length == 0){
+            // how to make it just append to top of page
+            return res.send(`<em>error</em> person is not valid`);
+        }
+        if (result.length == 1){
+            const personId = parseInt(result[0].nm);
+            res.redirect(`/nm/`+personId);
+        } 
+        if (result.length > 1) {
+            // create list of links
+            return res.send(`Mulitple people!`);
+        }
     } else {
-        result = await movie.find({title:term}).toArray();
+        result = await movie.find({title: new RegExp([term].join(""), "i")}).toArray();
+        if (result.length == 0){
+            return res.send(`Sorry, movie not found`);
+        }
+        if (result.length == 1){
+            const movieID = parseInt(result[0].tt);
+            res.redirect(`/tt/`+movieID);
+        } 
+        if (result.length > 1) {
+            //create list of links
+            return res.send(`Mulitple movies!`);
+        }
     }
-    console.log(result);
+    
 });
 
 // list all people in the wmdb.people table
